@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#07111f">
+<title>币安量化面板 V1 · 模拟交易</title>
+<style>
+:root{--bg:#07111f;--panel:#0d1b2c;--panel2:#10243a;--line:#203b56;--text:#e8f1fb;--muted:#92a8bf;--green:#19d3a2;--red:#ff667a;--blue:#4ea3ff;--gold:#f7c75a}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 50% -20%,#173958 0,#07111f 42%);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;font-size:14px}
+button,select{font:inherit}button{cursor:pointer;border:0;border-radius:12px;padding:12px 14px;font-weight:700;color:#061421;background:var(--green)}button.secondary{background:#173452;color:var(--text);border:1px solid var(--line)}button.danger{background:#4b2030;color:#ffdce1;border:1px solid #773044}
+.app{max-width:720px;margin:auto;padding:env(safe-area-inset-top) 14px calc(20px + env(safe-area-inset-bottom))}
+header{display:flex;align-items:center;justify-content:space-between;padding:18px 2px 14px;gap:10px}h1{font-size:19px;margin:0 0 5px}.sub{font-size:12px;color:var(--muted)}.pill{border:1px solid #1d775f;background:#0d382f;color:var(--green);padding:7px 10px;border-radius:999px;font-size:11px;font-weight:800;white-space:nowrap}
+.warning{background:#321b25;border:1px solid #7b3443;color:#ffdce1;border-radius:12px;padding:11px 12px;line-height:1.5;font-size:12px;margin:0 0 14px}
+.tabs{display:flex;gap:7px;overflow:auto;padding:2px 0 12px;scrollbar-width:none}.tabs button{flex:1;min-width:66px;padding:10px 8px;background:#0c1b2c;color:var(--muted);border:1px solid var(--line)}.tabs button.active{background:#143653;color:#fff;border-color:#2b6b9b}
+.card{background:linear-gradient(145deg,rgba(16,36,58,.98),rgba(10,25,41,.98));border:1px solid var(--line);border-radius:16px;padding:15px;margin-bottom:12px;box-shadow:0 10px 26px #0002}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px}.label{font-size:12px;color:var(--muted)}.price{font-size:29px;font-weight:800;letter-spacing:-.5px;margin:6px 0}.green{color:var(--green)}.red{color:var(--red)}.blue{color:var(--blue)}.gold{color:var(--gold)}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.metric{background:#071625;border:1px solid #18334d;border-radius:12px;padding:11px 9px;min-width:0}.metric strong{display:block;font-size:16px;margin-top:5px;overflow-wrap:anywhere}.actions{display:flex;gap:8px;margin-top:12px}.actions button{flex:1}
+.section-title{font-weight:800;font-size:15px;margin:0 0 12px}.signal{display:flex;gap:10px;align-items:flex-start}.signal-icon{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:#103c35;color:var(--green);font-size:18px;flex-shrink:0}.signal-icon.wait{background:#3a3020;color:var(--gold)}.signal h3{margin:1px 0 5px;font-size:14px}.signal p{margin:0;color:var(--muted);font-size:12px;line-height:1.5}
+.chart{width:100%;height:160px;display:block;background:linear-gradient(180deg,#071522,#0a1a2b);border:1px solid #1c3852;border-radius:12px}.chart-labels{display:flex;justify-content:space-between;color:var(--muted);font-size:10px;padding:7px 2px 0}
+.bar{height:7px;border-radius:99px;background:#20384e;overflow:hidden}.bar span{display:block;height:100%;background:var(--blue);border-radius:99px}
+.rowline{display:flex;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid #1a334b}.rowline:last-child{border-bottom:0}.rowline span:first-child{color:var(--muted)}
+.table{width:100%;border-collapse:collapse;font-size:12px}.table th,.table td{text-align:left;padding:10px 5px;border-bottom:1px solid #1a334b}.table th{color:var(--muted);font-weight:600}.empty{color:var(--muted);text-align:center;padding:22px 8px}
+.settings{display:grid;grid-template-columns:1fr 1fr;gap:10px}.field label{display:block;color:var(--muted);font-size:12px;margin-bottom:6px}.field select{width:100%;padding:11px;border-radius:10px;background:#071625;color:var(--text);border:1px solid var(--line)}
+.foot{color:#6f879f;font-size:11px;line-height:1.6;text-align:center;padding:8px 6px 20px}
+.nav{position:sticky;bottom:0;background:#07111fee;backdrop-filter:blur(16px);display:flex;justify-content:space-around;padding:10px 0 calc(8px + env(safe-area-inset-bottom));margin:0 -14px;border-top:1px solid #20354a}
+.nav button{background:transparent;color:var(--muted);padding:7px 12px;font-size:11px}.nav button.active{color:var(--green)}
+.hidden{display:none!important}.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#183a52;border:1px solid #36749d;padding:10px 15px;border-radius:999px;font-size:12px;display:none;z-index:5;max-width:90vw;text-align:center}
+@media(min-width:600px){.app{padding-left:22px;padding-right:22px}.price{font-size:34px}.grid{gap:12px}.metric{padding:14px}.card{padding:18px}}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <div><h1>币安量化面板 <span style="color:#6f879f;font-size:12px">V1</span></h1><div class="sub">U 本位永续 · BTC/USDT · 短线策略研究</div></div>
+  <span class="pill">● 仅模拟</span>
+</header>
+<div class="warning"><b>安全提示：</b>这是可交互的前端演示，行情和盈亏为示例数据；不连接币安、不读取账户、不发送任何真实订单。</div>
+<div class="tabs" id="tabs">
+  <button class="active" data-page="overview">总览</button><button data-page="market">行情</button><button data-page="strategy">策略</button><button data-page="backtest">回测</button><button data-page="paper">模拟交易</button>
+</div>
+
+<section id="overview" class="page">
+  <div class="card">
+    <div class="row"><span class="label">模拟账户资产</span><span class="label">USDT</span></div>
+    <div class="price"><span id="equity">1,000.00</span> <span style="font-size:13px;color:var(--muted)">USDT</span></div>
+    <div class="row"><span class="label">累计模拟盈亏</span><b id="pnl" class="green">+0.00 (0.00%)</b></div>
+    <div style="height:1px;background:var(--line);margin:14px 0"></div>
+    <div class="grid">
+      <div class="metric"><span class="label">今日盈亏</span><strong id="daily">0.00</strong></div>
+      <div class="metric"><span class="label">可用模拟资金</span><strong id="available">1,000.00</strong></div>
+      <div class="metric"><span class="label">当前持仓</span><strong id="positionCount">0</strong></div>
+    </div>
+    <div class="actions"><button id="startBtn">启动模拟</button><button class="secondary" id="resetBtn">重置账户</button></div>
+  </div>
+  <div class="card">
+    <div class="section-title">最新策略信号</div>
+    <div class="signal"><div id="signalIcon" class="signal-icon wait">◉</div><div><h3 id="signalTitle">等待信号</h3><p id="signalText">示例信号仅用于展示面板交互；尚未连接实时行情。</p><p style="margin-top:7px" class="label">周期：<span id="signalInterval">15 分钟</span> · EMA 趋势过滤 + 突破 + ATR 风控</p></div></div>
+  </div>
+  <div class="card">
+    <div class="row"><div class="section-title" style="margin:0">策略风险概览</div><span class="pill">保守默认值</span></div>
+    <div class="rowline"><span>单笔风险预算</span><b>0.5%</b></div>
+    <div class="rowline"><span>每日亏损停止线</span><b>1.5%</b></div>
+    <div class="rowline"><span>最大模拟名义仓位</span><b>1× 模拟权益</b></div>
+    <div class="rowline"><span>止损 / 止盈</span><b>ATR × 1.5 / 风险 × 2</b></div>
+  </div>
+</section>
+
+<section id="market" class="page hidden">
+  <div class="card">
+    <div class="row"><div><div class="label">BTC/USDT · 永续合约（演示）</div><div class="price" id="marketPrice">67,432.50</div></div><span class="green" id="marketChange">+0.93%</span></div>
+    <div class="settings" style="margin:12px 0"><div class="field"><label for="interval">K 线周期</label><select id="interval"><option value="15">15 分钟</option><option value="5">5 分钟</option></select></div><div class="field"><label>策略观察</label><select id="viewType"><option>EMA + 突破</option><option>仅趋势过滤</option></select></div></div>
+    <canvas id="chart" class="chart" aria-label="示例K线图"></canvas><div class="chart-labels"><span>较早</span><span>示例价格走势</span><span>最新</span></div>
+  </div>
+  <div class="card"><div class="section-title">技术指标（示例）</div>
+    <div class="rowline"><span>EMA 50</span><b>66,543.20</b></div><div class="rowline"><span>EMA 200</span><b>65,873.60</b></div><div class="rowline"><span>ATR 14</span><b>245.80</b></div><div class="rowline"><span>成交量状态</span><b class="blue">中等</b></div>
+  </div>
+</section>
+
+<section id="strategy" class="page hidden">
+  <div class="card"><div class="section-title">策略参数</div>
+    <div class="settings">
+      <div class="field"><label>交易市场</label><select disabled><option>U 本位永续</option></select></div>
+      <div class="field"><label>交易对</label><select disabled><option>BTC/USDT</option></select></div>
+      <div class="field"><label>K 线周期</label><select id="interval2"><option value="15">15 分钟</option><option value="5">5 分钟</option></select></div>
+      <div class="field"><label>模拟初始资金</label><select id="capital"><option value="500">500 USDT</option><option value="1000" selected>1,000 USDT</option><option value="2000">2,000 USDT</option></select></div>
+      <div class="field"><label>单笔风险</label><select id="risk"><option value="0.25">0.25%</option><option value="0.5" selected>0.5%</option><option value="0.75">0.75%</option></select></div>
+      <div class="field"><label>每日亏损上限</label><select id="dailyLimit"><option value="1">1.0%</option><option value="1.5" selected>1.5%</option><option value="2">2.0%</option></select></div>
+    </div>
+    <div class="rowline" style="margin-top:8px"><span>趋势过滤</span><b>EMA 50 / EMA 200</b></div>
+    <div class="rowline"><span>突破回看</span><b>20 根已完成 K 线</b></div>
+    <div class="rowline"><span>止损距离</span><b>ATR 14 × 1.5</b></div>
+    <div class="rowline"><span>目标盈亏比</span><b>1 : 2</b></div>
+    <button id="saveSettings" style="width:100%;margin-top:12px">保存演示设置</button>
+  </div>
+  <div class="warning">参数修改只影响此页面的演示展示，不代表策略经过验证，也不会调用交易所。</div>
+</section>
+
+<section id="backtest" class="page hidden">
+  <div class="card"><div class="section-title">回测摘要（示例结果，不是真实回测）</div>
+    <div class="row"><span class="label">测试区间</span><b>示例：30 天</b></div>
+    <div class="grid" style="margin-top:12px">
+      <div class="metric"><span class="label">净收益</span><strong class="green">+3.8%</strong></div>
+      <div class="metric"><span class="label">胜率</span><strong>52.4%</strong></div>
+      <div class="metric"><span class="label">最大回撤</span><strong class="gold">4.1%</strong></div>
+    </div>
+    <div style="margin-top:17px"><div class="row"><span class="label">净值曲线（示意）</span><span class="label">起始 1,000 USDT</span></div><canvas id="equityChart" class="chart" style="margin-top:8px;height:130px"></canvas></div>
+  </div>
+  <div class="card"><div class="section-title">真实回测前必须补齐</div>
+    <div class="rowline"><span>更长历史 K 线</span><b>至少覆盖多种行情</b></div>
+    <div class="rowline"><span>交易成本</span><b>手续费、滑点、资金费率</b></div>
+    <div class="rowline"><span>验证方式</span><b>样本外 / 滚动测试</b></div>
+    <div class="rowline"><span>评估指标</span><b>净收益、回撤、盈亏比</b></div>
+  </div>
+</section>
+
+<section id="paper" class="page hidden">
+  <div class="card"><div class="row"><div class="section-title" style="margin:0">模拟账户</div><span class="pill">无真实订单</span></div><p class="sub">此处的开仓、平仓仅更新本页面的虚拟记录，不会连接币安账户。</p>
+    <div class="grid"><div class="metric"><span class="label">虚拟权益</span><strong id="paperEquity">1,000.00</strong></div><div class="metric"><span class="label">已平仓笔数</span><strong id="tradeCount">0</strong></div><div class="metric"><span class="label">当前浮盈亏</span><strong id="unrealized">0.00</strong></div></div>
+    <div class="actions"><button id="longBtn">模拟做多</button><button id="shortBtn" class="secondary">模拟做空</button></div><div class="actions"><button id="closeBtn" class="danger">模拟平仓</button></div>
+  </div>
+  <div class="card"><div class="section-title">当前持仓</div><div id="positionBox" class="empty">当前没有模拟持仓</div></div>
+  <div class="card"><div class="section-title">模拟交易记录</div><div id="tradeHistory" class="empty">暂无记录；可使用上方按钮测试模拟操作。</div></div>
+</section>
+
+<div class="foot">演示原型 · 示例行情和回测数字均为虚构展示数据 · 不构成投资建议<br>无 API Key、无账户读取、无真实下单功能。使用前请先验证策略与风险控制。</div>
+<div class="nav"><button class="active" data-page="overview">⌂<br>总览</button><button data-page="market">⌁<br>行情</button><button data-page="strategy">⚙<br>策略</button><button data-page="backtest">▥<br>回测</button><button data-page="paper">▣<br>模拟</button></div>
+<div id="toast" class="toast"></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+let initialCapital=1000, equity=1000, totalPnl=0, dailyPnl=0, position=null, trades=[], running=false;
+let price=67432.5, tick=0, currentInterval='15';
+function money(n){return n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}
+function toast(msg){const t=$('toast');t.textContent=msg;t.style.display='block';setTimeout(()=>t.style.display='none',2200)}
+function go(page){document.querySelectorAll('.page').forEach(s=>s.classList.toggle('hidden',s.id!==page));document.querySelectorAll('[data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===page));if(page==='market')drawChart($('chart'));if(page==='backtest')drawEquity()}
+document.querySelectorAll('[data-page]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.page)));
+function updateUI(){
+ $('equity').textContent=money(equity);$('available').textContent=money(equity);$('paperEquity').textContent=money(equity);
+ $('pnl').textContent=(totalPnl>=0?'+':'')+money(totalPnl)+' ('+(totalPnl/initialCapital*100).toFixed(2)+'%)';
+ $('pnl').className=totalPnl>=0?'green':'red';$('daily').textContent=(dailyPnl>=0?'+':'')+money(dailyPnl);$('daily').className=dailyPnl>=0?'green':'red';
+ $('positionCount').textContent=position?'1':'0';$('tradeCount').textContent=trades.length;
+ let u=position?(price-position.entry)*position.qty*(position.side==='LONG'?1:-1):0;
+ $('unrealized').textContent=(u>=0?'+':'')+money(u);$('unrealized').className=u>=0?'green':'red';
+ if(position){$('positionBox').innerHTML=`<div class="rowline"><span>方向</span><b class="${position.side==='LONG'?'green':'red'}">${position.side==='LONG'?'模拟做多':'模拟做空'}</b></div><div class="rowline"><span>入场价</span><b>${money(position.entry)}</b></div><div class="rowline"><span>模拟数量</span><b>${position.qty.toFixed(5)} BTC</b></div><div class="rowline"><span>参考止损</span><b>${money(position.stop)}</b></div><div class="rowline"><span>参考止盈</span><b>${money(position.target)}</b></div>`}
+ else $('positionBox').textContent='当前没有模拟持仓';
+ $('tradeHistory').innerHTML=trades.length?'<table class="table"><thead><tr><th>方向</th><th>入场</th><th>出场</th><th>净盈亏</th></tr></thead><tbody>'+trades.slice().reverse().map(t=>`<tr><td class="${t.side==='LONG'?'green':'red'}">${t.side==='LONG'?'做多':'做空'}</td><td>${money(t.entry)}</td><td>${money(t.exit)}</td><td class="${t.pnl>=0?'green':'red'}">${t.pnl>=0?'+':''}${money(t.pnl)}</td></tr>`).join('')+'</tbody></table>':'暂无记录；可使用上方按钮测试模拟操作';
+}
+function drawChart(canvas){
+ if(!canvas)return;let dpr=window.devicePixelRatio||1,w=canvas.clientWidth,h=canvas.clientHeight;canvas.width=w*dpr;canvas.height=h*dpr;let c=canvas.getContext('2d');c.scale(dpr,dpr);c.clearRect(0,0,w,h);
+ c.strokeStyle='#18334a';c.lineWidth=1;for(let i=1;i<5;i++){let y=h*i/5;c.beginPath();c.moveTo(0,y);c.lineTo(w,y);c.stroke()}
+ let vals=[],v= h*.57;for(let i=0;i<46;i++){v+=(Math.sin(i*.75)*3)+(Math.cos(i*.21)*2)+(i>28?1.1:-.2);vals.push(v)}
+ const min=Math.min(...vals)-8,max=Math.max(...vals)+8;const Y=x=>h-12-(x-min)/(max-min)*(h-24);const step=w/vals.length;
+ for(let i=0;i<vals.length;i++){let open=vals[Math.max(0,i-1)],close=vals[i],up=close<open;c.strokeStyle=up?'#ff667a':'#19d3a2';c.fillStyle=c.strokeStyle;let x=i*step+step/2;c.beginPath();c.moveTo(x,Y(close)-4);c.lineTo(x,Y(close)+4);c.stroke();c.fillRect(x-step*.22,Math.min(Y(open),Y(close)),step*.44,Math.max(2,Math.abs(Y(open)-Y(close))))}
+}
+function drawEquity(){let cv=$('equityChart');if(!cv)return;let dpr=window.devicePixelRatio||1,w=cv.clientWidth,h=cv.clientHeight;cv.width=w*dpr;cv.height=h*dpr;let c=cv.getContext('2d');c.scale(dpr,dpr);c.clearRect(0,0,w,h);c.strokeStyle='#18334a';for(let i=1;i<4;i++){c.beginPath();c.moveTo(0,h*i/4);c.lineTo(w,h*i/4);c.stroke()}let vals=[1000,1008,1003,1018,1012,1025,1019,1032,1024,1040,1031,1038];let min=990,max=1048; c.strokeStyle='#4ea3ff';c.lineWidth=2;c.beginPath();vals.forEach((v,i)=>{let x=i*w/(vals.length-1),y=h-10-(v-min)/(max-min)*(h-20);i?c.lineTo(x,y):c.moveTo(x,y)});c.stroke()}
+function openPosition(side){
+ if(position){toast('已有模拟持仓，请先平仓');return}
+ const riskPct=Number($('risk')?.value||.5)/100,dist=price*.00365,qty=Math.min(equity*riskPct/dist,equity/price);
+ position={side,entry:price,qty,stop:side==='LONG'?price-dist:price+dist,target:side==='LONG'?price+2*dist:price-2*dist};
+ toast('已创建虚拟持仓，不会发送真实订单');updateUI()
+}
+function closePosition(){
+ if(!position){toast('当前没有模拟持仓');return}
+ let p=position,exit=price,sign=p.side==='LONG'?1:-1,gross=(exit-p.entry)*p.qty*sign;
+ let cost=(p.entry*p.qty+exit*p.qty)*.0007,pnl=gross-cost;
+ equity+=pnl;totalPnl+=pnl;dailyPnl+=pnl;trades.push({side:p.side,entry:p.entry,exit,pnl});
+ position=null;updateUI();toast('模拟平仓完成：'+(pnl>=0?'+':'')+money(pnl)+' USDT')
+}
+$('longBtn').onclick=()=>openPosition('LONG');$('shortBtn').onclick=()=>openPosition('SHORT');$('closeBtn').onclick=closePosition;
+$('startBtn').onclick=()=>{running=!running;$('startBtn').textContent=running?'停止模拟':'启动模拟';$('startBtn').className=running?'secondary':'';toast(running?'演示行情模拟已启动':'演示模拟已暂停')};
+$('resetBtn').onclick=()=>{if(!confirm('确定清空本页面模拟账户和记录？'))return;initialCapital=Number($('capital')?.value||1000);equity=initialCapital;totalPnl=0;dailyPnl=0;position=null;trades=[];running=false;$('startBtn').textContent='启动模拟';updateUI();toast('模拟账户已重置')};
+$('saveSettings').onclick=()=>{currentInterval=$('interval2').value;$('interval').value=currentInterval;$('signalInterval').textContent=currentInterval+' 分钟';initialCapital=Number($('capital').value);toast('演示设置已更新');};
+$('interval').onchange=()=>{$('interval2').value=$('interval').value;currentInterval=$('interval').value;$('signalInterval').textContent=currentInterval+' 分钟';drawChart($('chart'))};
+$('interval2').onchange=()=>{$('interval').value=$('interval2').value;currentInterval=$('interval2').value;$('signalInterval').textContent=currentInterval+' 分钟'};
+window.addEventListener('resize',()=>{drawChart($('chart'));drawEquity()});
+setInterval(()=>{if(!running)return;tick++;price+=Math.sin(tick*.8)*16+(Math.random()-.48)*12;$('marketPrice').textContent=money(price);$('marketChange').textContent=(price>=67432.5?'+':'')+((price/67432.5-1)*100).toFixed(2)+'%';if(position){let hit=(position.side==='LONG'&&(price<=position.stop||price>=position.target))||(position.side==='SHORT'&&(price>=position.stop||price<=position.target));if(hit)closePosition()}updateUI();drawChart($('chart'))},2500);
+updateUI();drawChart($('chart'));drawEquity();
+</script>
+</body></html>
